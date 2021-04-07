@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Dropdown = ({ options, selected, onSelectedChange }) => {
     const [open, setOpen] = useState(false);
+    const ref = useRef();
 
     useEffect(() => {
-        // The addEventListener will be call first
-        document.body.addEventListener("click", (event) => {
-                console.log(event.target)
-                setOpen(false);
-            },
-            { capture: true }
-        );
+        const onBodyClick = (event) => {
+            if (ref.current.contains(event.target)) {
+                return;
+            }
+            setOpen(false);
+        };
+        document.body.addEventListener("click", onBodyClick, { capture: true });
+
+        // Removing EventListener to avoid error "Cannot read property 'contains' of null"
+        return () => {
+            document.body.removeEventListener("click", onBodyClick, {
+                capture: true,
+            });
+        };
     }, []);
 
     const renderedOptions = options.map((option) => {
@@ -31,7 +39,7 @@ const Dropdown = ({ options, selected, onSelectedChange }) => {
     });
 
     return (
-        <div className="ui form">
+        <div ref={ref} className="ui form">
             <div className="field">
                 <label className="label">Select a color</label>
                 <div
